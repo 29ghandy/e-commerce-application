@@ -4,7 +4,7 @@ import userRoles from "./user-roles";
 
 
 const User = sequelize.define('user', {
-    id: {
+    userID: {
         type: DataTypes.INTEGER
         ,
         autoIncrement: true,
@@ -39,4 +39,4 @@ const User = sequelize.define('user', {
 });
 // c , cs
 
-export default User
+export default User;

@@ -3,7 +3,7 @@ import sequelize from "../util/database";
 import { DataTypes } from "sequelize";
 
 const Order = sequelize.define('orders', {
-    id: {
+    orderID: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false
@@ -16,3 +16,4 @@ const Order = sequelize.define('orders', {
     }
 
 });
+export default Order;

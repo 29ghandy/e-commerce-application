@@ -4,10 +4,11 @@ import { DataTypes } from "sequelize";
 
 
 const chat = sequelize.define('chat', {
-    id: {
+    chatID: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        autoIncrement: true
+        autoIncrement:true ,
+        primaryKey:true
     }
     ,
     customerID: {

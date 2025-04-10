@@ -5,7 +5,7 @@ import { DataTypes, Sequelize } from "sequelize";
 
 
 const Product = sequelize.define('product', {
-    id: {
+    productID: {
         type: DataTypes.INTEGER
         ,
         primaryKey: true,
@@ -36,3 +36,4 @@ const Product = sequelize.define('product', {
 
 
 });
+export default Product;
