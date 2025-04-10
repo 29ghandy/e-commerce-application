@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, IntegerDataType } from "sequelize";
 
 import sequelize from "../util/database";
 
