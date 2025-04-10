@@ -1,6 +1,7 @@
 import { Sequelize, DataTypes, IntegerDataType } from "sequelize";
-
 import sequelize from "../util/database";
+import userRoles from "./user-roles";
+
 
 const User = sequelize.define('user', {
     id: {
@@ -23,7 +24,19 @@ const User = sequelize.define('user', {
     password: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    role: {
+        type:DataTypes.ENUM
+        ,values:userRoles,
+
+        allowNull:false
+    }
+    ,
+    free: {
+         type:DataTypes.BOOLEAN
+         ,allowNull:true
     }
 });
+// c , cs
 
 export default User
