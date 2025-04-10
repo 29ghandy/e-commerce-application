@@ -10,6 +10,7 @@ const Product = sequelize.define('product', {
         ,
         primaryKey: true,
         allowNull: false
+        , autoIncrement: true
     }
     ,
     price: {
