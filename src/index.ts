@@ -7,15 +7,15 @@ import Product from './models/product';
 import OrderItem from './models/orderItem';
 import Chat from './models/chat';
 import Message from './models/message';
-
+import authRoutes from './routes/auth';
 
 const app = express();
 // relationships
 
-
+app.use(bodyParser.json());
 // One User has One Order
-User.hasOne(Order, { foreignKey: 'customerID', onDelete: 'CASCADE' });
-Order.belongsTo(User, { foreignKey: 'customerID' });
+User.hasOne(Order, { foreignKey: 'userID',constraints:true, onDelete: 'CASCADE' });
+Order.belongsTo(User, { foreignKey: 'userID' });
 
 // Order has Many OrderItems
 Order.hasMany(OrderItem, { foreignKey: 'orderID', onDelete: 'CASCADE' });
@@ -26,19 +26,21 @@ Product.hasMany(OrderItem, { foreignKey: 'productID', onDelete: 'CASCADE' });
 OrderItem.belongsTo(Product, { foreignKey: 'productID' });
 
 // User to Chat (as customer)
-User.hasMany(Chat, { foreignKey: 'customerId', as: 'CustomerChats' });
-Chat.belongsTo(User, { foreignKey: 'customerId', as: 'Customer' });
+User.hasMany(Chat, { foreignKey: 'userID', as: 'CustomerChats' });
+Chat.belongsTo(User, { foreignKey: 'userID', as: 'Customer' });
 
 // // User to Chat (as customer service)
-User.hasMany(Chat, { foreignKey: 'customerServiceId', as: 'ServiceChats' });
-Chat.belongsTo(User, { foreignKey: 'customerServiceId', as: 'CustomerService' });
+User.hasMany(Chat, { foreignKey: 'userID', as: 'ServiceChats' });
+Chat.belongsTo(User, { foreignKey: 'userID', as: 'CustomerService' });
 
 // Chat to Messages
 Chat.hasMany(Message, { foreignKey: 'chatID', onDelete: 'CASCADE' });
 Message.belongsTo(Chat, { foreignKey: 'chatID' });
 
 
-app.use(bodyParser.json());
+
+app.use('/auth',authRoutes);
+
 
 sequelize.sync()
 .then(res => {

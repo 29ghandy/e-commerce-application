@@ -6,10 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = __importDefault(require("../util/database"));
 const sequelize_1 = require("sequelize");
 const chat = database_1.default.define('chat', {
-    id: {
+    chatID: {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
-        autoIncrement: true
+        autoIncrement: true,
+        primaryKey: true
     },
     customerID: {
         type: sequelize_1.DataTypes.INTEGER,
