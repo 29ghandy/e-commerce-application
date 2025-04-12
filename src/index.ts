@@ -8,6 +8,9 @@ import OrderItem from "./models/orderItem";
 import Chat from "./models/chat";
 import Message from "./models/message";
 import authRoutes from "./routes/auth";
+import adminRoutes from "./routes/admin";
+import customerRoutes from "./routes/customer";
+import customerServiceRoutes from "./routes/customer-service";
 
 const app = express();
 // relationships
@@ -42,6 +45,12 @@ Chat.hasMany(Message, { foreignKey: "chatID", onDelete: "CASCADE" });
 Message.belongsTo(Chat, { foreignKey: "chatID" });
 
 app.use("/auth", authRoutes);
+
+app.use("/admin", adminRoutes);
+
+app.use("/customer", customerRoutes);
+
+app.use("/customer-service", customerServiceRoutes);
 
 sequelize
   .sync()

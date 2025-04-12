@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateProduct = exports.deleteProduct = exports.addProduct = exports.getProduct = void 0;
+const getProduct = async (req, res, next) => { };
+exports.getProduct = getProduct;
+const addProduct = async (req, res, next) => { };
+exports.addProduct = addProduct;
+const deleteProduct = async (req, res, next) => { };
+exports.deleteProduct = deleteProduct;
+const updateProduct = async (req, res, next) => { };
+exports.updateProduct = updateProduct;

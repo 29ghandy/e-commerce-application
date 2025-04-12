@@ -1,8 +1,8 @@
 import { IntegerDataType, where } from "sequelize";
 import User from "../models/user";
 import bcrypt from "bcryptjs";
-import message from "../models/message";
 import { reqBodyAuth } from "../types";
+import jwt from "jsonwebtoken";
 
 export const signup = async (req: any, res: any, next: any) => {
   try {
@@ -44,10 +44,26 @@ export const login = async (req: any, res: any, next: any) => {
     if (!isMatch) {
       throw new Error("Invalid password");
     }
-    res.status(201).json({ message: "login is successful" });
+    const token = jwt.sign(
+      {
+        email: user.email,
+        userID: user.userID,
+      },
+      "secret",
+      { expiresIn: "1h" }
+    );
+
+    res.status(201).json({
+      message: "login is successful",
+      token: token,
+      userID: user.userID,
+    });
   } catch (err) {
     console.log(err);
-    res.status(401).json({ message: "couldn t login" });
+    res.status(500).json("server is down there is a problem with login in");
   }
 };
-export const forgetPassword = async (req: any, res: any, next: any) => {};
+export const forgetPassword = async (req: any, res: any, next: any) => {
+  try {
+  } catch (err) {}
+};

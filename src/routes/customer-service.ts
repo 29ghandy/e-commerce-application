@@ -3,10 +3,4 @@ import { signup, login, forgetPassword } from "../controllers/authContorller";
 
 const router = Router();
 
-router.post("/signup", signup);
-
-router.post("/login", login);
-
-router.post("/forgetpassword", forgetPassword);
-
 export default router;

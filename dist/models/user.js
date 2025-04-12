@@ -6,34 +6,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
 const database_1 = __importDefault(require("../util/database"));
 const user_roles_1 = __importDefault(require("./user-roles"));
-const User = database_1.default.define('user', {
+const User = database_1.default.define("user", {
     userID: {
         type: sequelize_1.DataTypes.INTEGER,
         autoIncrement: true,
         allowNull: false,
-        primaryKey: true
+        primaryKey: true,
     },
     name: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     email: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     password: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     role: {
         type: sequelize_1.DataTypes.ENUM,
         values: user_roles_1.default,
-        allowNull: false
+        allowNull: false,
     },
     free: {
         type: sequelize_1.DataTypes.BOOLEAN,
-        allowNull: true
-    }
+        allowNull: true,
+    },
 });
 // c , cs
 exports.default = User;
