@@ -1,6 +1,3 @@
-const UserRoles = [
-    'customerService',
-    'customer'
-]
+const UserRoles = ["customerService", "customer", "admin"];
 
 export default UserRoles;

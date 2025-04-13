@@ -8,7 +8,7 @@ import OrderItem from "./models/orderItem";
 import Chat from "./models/chat";
 import Message from "./models/message";
 import authRoutes from "./routes/auth";
-import adminRoutes from "./routes/admin";
+import Rating from "./models/rating";
 import customerRoutes from "./routes/customer";
 import customerServiceRoutes from "./routes/customer-service";
 
@@ -43,10 +43,11 @@ Chat.belongsTo(User, { foreignKey: "userID", as: "CustomerService" });
 // Chat to Messages
 Chat.hasMany(Message, { foreignKey: "chatID", onDelete: "CASCADE" });
 Message.belongsTo(Chat, { foreignKey: "chatID" });
+// product to ratings
+Product.hasMany(Rating, { foreignKey: "productID", onDelete: "CASCADE" });
+Rating.belongsTo(Product, { foreignKey: "productID" });
 
 app.use("/auth", authRoutes);
-
-app.use("/admin", adminRoutes);
 
 app.use("/customer", customerRoutes);
 
