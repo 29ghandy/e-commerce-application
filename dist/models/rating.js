@@ -5,36 +5,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = __importDefault(require("../util/database"));
 const sequelize_1 = require("sequelize");
-const Product = database_1.default.define("product", {
-    productID: {
+const Rating = database_1.default.define("rating", {
+    ratingID: {
         type: sequelize_1.DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
     },
-    name: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
-    },
-    price: {
-        type: sequelize_1.DataTypes.DOUBLE,
-        allowNull: false,
-    },
-    amount_in_inventory: {
+    productID: {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
-    desciption: {
+    starts: {
+        type: sequelize_1.DataTypes.INTEGER,
+        allowNull: false,
+    },
+    review_message: {
         type: sequelize_1.DataTypes.TEXT,
-        allowNull: false,
-    },
-    userID: {
-        type: sequelize_1.DataTypes.INTEGER,
-        allowNull: false,
-    },
-    imageUrl: {
-        type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
 });
-exports.default = Product;
+exports.default = Rating;

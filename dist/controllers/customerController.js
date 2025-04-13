@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.checkOut = exports.updateOrder = exports.cancelOrder = exports.createOrder = exports.updateProduct = exports.deleteProduct = exports.createProduct = exports.viewProduct = exports.viewCustomerProducts = void 0;
+const viewCustomerProducts = async (req, res, next) => { };
+exports.viewCustomerProducts = viewCustomerProducts;
+const viewProduct = async (req, res, next) => { };
+exports.viewProduct = viewProduct;
+const createProduct = async (req, res, next) => { };
+exports.createProduct = createProduct;
+const deleteProduct = async (req, res, next) => { };
+exports.deleteProduct = deleteProduct;
+const updateProduct = async (req, res, next) => { };
+exports.updateProduct = updateProduct;
+const createOrder = async (req, res, next) => { };
+exports.createOrder = createOrder;
+const cancelOrder = async (req, res, next) => { };
+exports.cancelOrder = cancelOrder;
+const updateOrder = async (req, res, next) => { };
+exports.updateOrder = updateOrder;
+const checkOut = async (req, res, next) => { };
+exports.checkOut = checkOut;
+// c cs

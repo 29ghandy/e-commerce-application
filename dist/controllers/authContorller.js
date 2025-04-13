@@ -26,8 +26,8 @@ const signup = async (req, res, next) => {
         res.status(201).json({ message: "User created!" });
     }
     catch (err) {
-        console.log(err);
-        res.status(501).json({ message: "couldn t create users" });
+        err.statusCode = 500;
+        throw err;
     }
 };
 exports.signup = signup;
@@ -55,8 +55,8 @@ const login = async (req, res, next) => {
         });
     }
     catch (err) {
-        console.log(err);
-        res.status(500).json("server is down there is a problem with login in");
+        err.statusCode = 500;
+        throw err;
     }
 };
 exports.login = login;

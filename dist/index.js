@@ -13,6 +13,9 @@ const orderItem_1 = __importDefault(require("./models/orderItem"));
 const chat_1 = __importDefault(require("./models/chat"));
 const message_1 = __importDefault(require("./models/message"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const rating_1 = __importDefault(require("./models/rating"));
+const customer_1 = __importDefault(require("./routes/customer"));
+const customer_service_1 = __importDefault(require("./routes/customer-service"));
 const app = (0, express_1.default)();
 // relationships
 app.use(body_parser_1.default.json());
@@ -38,7 +41,18 @@ chat_1.default.belongsTo(user_1.default, { foreignKey: "userID", as: "CustomerSe
 // Chat to Messages
 chat_1.default.hasMany(message_1.default, { foreignKey: "chatID", onDelete: "CASCADE" });
 message_1.default.belongsTo(chat_1.default, { foreignKey: "chatID" });
+// product to ratings
+product_1.default.hasMany(rating_1.default, { foreignKey: "productID", onDelete: "CASCADE" });
+rating_1.default.belongsTo(product_1.default, { foreignKey: "productID" });
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+});
 app.use("/auth", auth_1.default);
+app.use("/customer", customer_1.default);
+app.use("/customer-service", customer_service_1.default);
 database_1.default
     .sync()
     .then((res) => {
