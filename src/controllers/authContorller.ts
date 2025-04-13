@@ -23,8 +23,8 @@ export const signup = async (req: any, res: any, next: any) => {
 
     res.status(201).json({ message: "User created!" });
   } catch (err) {
-    console.log(err);
-    res.status(501).json({ message: "couldn t create users" });
+    (err as any).statusCode = 500;
+    throw err;
   }
 };
 
@@ -59,8 +59,8 @@ export const login = async (req: any, res: any, next: any) => {
       userID: user.userID,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json("server is down there is a problem with login in");
+    (err as any).statusCode = 500;
+    throw err;
   }
 };
 export const forgetPassword = async (req: any, res: any, next: any) => {

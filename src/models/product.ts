@@ -26,6 +26,10 @@ const Product = sequelize.define("product", {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  userID: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   imageUrl: {
     type: DataTypes.STRING,
     allowNull: false,

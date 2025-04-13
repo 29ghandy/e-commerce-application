@@ -13,5 +13,9 @@ const Order = sequelize.define("orders", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  status: {
+       type:DataTypes.STRING,
+       allowNull:false
+  }
 });
 export default Order;
