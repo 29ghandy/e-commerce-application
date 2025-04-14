@@ -1,8 +1,11 @@
-import { where } from "sequelize";
+import { or, where } from "sequelize";
 import Product from "../models/product";
-import { reqBodyProuduct } from "../types";
+import { reqBodyOrder, reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import message from "../models/message";
+import { ppid } from "process";
+import Order from "../models/order";
+import OrderItems from "../models/orderItem";
 
 export const viewCustomerProducts = async (req: any, res: any, next: any) => {
   try {
@@ -48,28 +51,27 @@ export const createProduct = async (req: any, res: any, next: any) => {
     if (!product) {
       await Product.create(
         {
-          name: reqBody.name as string,
-          price: reqBody.price as number,
-          description: reqBody.description as string,
-          imageUrl: reqBody.imageUrl as string,
-          userID: reqBody.userID as number,
+          name: reqBody.name,
+          price: reqBody.price,
+          description: reqBody.description,
+          imageUrl: reqBody.imageUrl,
+          userID: reqBody.userID,
           amount_in_inventory: 1,
         },
         { transaction: t }
       );
     } else {
       const productSchema = product.get();
-      productSchema.amount_in_inventory += 1;
-      product.update(
+      await product.update(
         {
           amount_in_inventory: productSchema.amount_in_inventory + 1,
         },
         { transaction: t }
       );
       await product.save();
-      await t.commit();
-      res.status(201).json({ message: "product created" });
     }
+    await t.commit();
+    res.status(201).json({ message: "product created" });
   } catch (err) {
     await t.rollback();
     (err as any).statusCode = 500;
@@ -118,7 +120,7 @@ export const updateProduct = async (req: any, res: any, next: any) => {
       (err as any).statusCode = 404;
       throw err;
     } else {
-      product.update(
+      await product.update(
         {
           name: reqBody.name as string,
           price: reqBody.price as number,
@@ -139,12 +141,143 @@ export const updateProduct = async (req: any, res: any, next: any) => {
   }
 };
 
-export const createOrder = async (req: any, res: any, next: any) => {};
+export const createOrder = async (req: any, res: any, next: any) => {
+  const t = await sequelize.transaction();
+  try {
+    const reqBod = req.body;
+    const quantityMap = new Map<number, number>(
+      Object.entries(reqBod.products).map(([k, v]) => [
+        parseInt(k),
+        v as number,
+      ])
+    );
+    reqBod.products = quantityMap;
+    const reqBody = reqBod as reqBodyOrder;
 
-export const cancelOrder = async (req: any, res: any, next: any) => {};
+    // Step 1: Create Order
+    const order = await Order.create(
+      {
+        userID: reqBody.userID,
+        status: "unpaid",
+        totalPrice: 0,
+      },
+      { transaction: t }
+    );
 
-export const updateOrder = async (req: any, res: any, next: any) => {};
+    const orderId = order.get().orderID;
 
-export const checkOut = async (req: any, res: any, next: any) => {};
+    // Step 2: Extract product IDs and quantities from object
+    const productIds = [];
+    for (const key of reqBody.products.keys()) {
+      productIds.push(key as number);
+    }
+    // console.log(productIds);
+    // console.log(productIds + "\n" + quantityMap);
+    // Step 3: Fetch all products at once
+    const products = await Product.findAll({
+      where: { productID: productIds },
+      transaction: t,
+    });
+
+    let totalPrice = 0;
+    const orderItemsData = [];
+    const inventoryUpdates: { productID: number; newInventory: number }[] = [];
+    // console.log(products);
+    for (const product of products) {
+      const p = product.get();
+      const quantity = reqBody.products.get(p.productID)! as number;
+      // console.log(p.amount_in_inventory);
+      if (p.amount_in_inventory < quantity) {
+        throw new Error(
+          `Product ${p.productID} does not have enough inventory`
+        );
+      }
+
+      inventoryUpdates.push({
+        productID: p.productID,
+        newInventory: p.amount_in_inventory - quantity,
+      });
+
+      orderItemsData.push({
+        orderID: orderId,
+        productID: p.productID,
+        quantity,
+        price: p.price,
+      });
+
+      totalPrice += p.price * quantity;
+    }
+    // console.log(totalPrice);
+    // Step 4: Bulk insert order items
+    await OrderItems.bulkCreate(orderItemsData, { transaction: t });
+
+    // Step 5: Bulk inventory update using raw SQL
+    const updateCases = inventoryUpdates
+      .map((item) => `WHEN ${item.productID} THEN ${item.newInventory}`)
+      .join(" ");
+    if (inventoryUpdates.length > 0) {
+      const updateIDs = inventoryUpdates
+        .map((item) => item.productID)
+        .join(", ");
+
+      const updateQuery = `
+        UPDATE \`Products\`
+        SET \`amount_in_inventory\` = CASE \`productID\`
+          ${updateCases}
+        END
+        WHERE \`productID\` IN (${updateIDs})
+      `;
+
+      await sequelize.query(updateQuery, { transaction: t });
+    }
+    // Step 6: Update total price
+    await order.update({ totalPrice }, { transaction: t });
+
+    await t.commit();
+    res.status(201).json({ message: "order created" });
+  } catch (err) {
+    await t.rollback();
+    (err as any).statusCode = 500;
+    console.error(err);
+    throw err;
+  }
+};
+
+export const cancelOrder = async (req: any, res: any, next: any) => {
+  const t = await sequelize.transaction();
+  try {
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
+};
+
+export const updateOrder = async (req: any, res: any, next: any) => {
+  try {
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
+};
+
+export const giveRating = async (req: any, res: any, next: any) => {
+  try {
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
+};
+
+export const checkOut = async (req: any, res: any, next: any) => {
+  try {
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
+};
 
 // c cs

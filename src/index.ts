@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth";
 import Rating from "./models/rating";
 import customerRoutes from "./routes/customer";
 import customerServiceRoutes from "./routes/customer-service";
+import message from "./models/message";
 
 const app = express();
 // relationships
@@ -57,6 +58,17 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/home", async (req: any, res: any, next: any) => {
+  try {
+    const products = await Product.findAll();
+    if (products.length == 0)
+      res.status(202).json({ message: "no Products in inventory" });
+    else res.status(200).json({ message: "Products :", products: products });
+  } catch (err) {
+    (err as any).statusCode = 500;
+    throw err;
+  }
+});
 app.use("/auth", authRoutes);
 
 app.use("/customer", customerRoutes);

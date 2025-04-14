@@ -11,3 +11,7 @@ export type reqBodyProuduct = {
   description: string;
   userID: number;
 };
+export type reqBodyOrder = {
+  products: Map<Number, Number>; // id , f
+  userID: number;
+};

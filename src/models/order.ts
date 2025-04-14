@@ -14,8 +14,12 @@ const Order = sequelize.define("orders", {
     allowNull: false,
   },
   status: {
-       type:DataTypes.STRING,
-       allowNull:false
-  }
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  totalPrice: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 });
 export default Order;

@@ -73,5 +73,17 @@ export const login = async (req: any, res: any, next: any) => {
 };
 export const forgetPassword = async (req: any, res: any, next: any) => {
   try {
-  } catch (err) {}
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
+};
+export const deleteAccount = async (req: any, res: any, next: any) => {
+  try {
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.log(err);
+    throw err;
+  }
 };
