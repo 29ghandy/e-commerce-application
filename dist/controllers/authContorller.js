@@ -7,7 +7,9 @@ exports.forgetPassword = exports.login = exports.signup = void 0;
 const user_1 = __importDefault(require("../models/user"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const database_1 = __importDefault(require("../util/database"));
 const signup = async (req, res, next) => {
+    const t = await database_1.default.transaction();
     try {
         const body = req.body;
         const hashedPassword = await bcryptjs_1.default.hash(body.password, 12);
@@ -22,10 +24,12 @@ const signup = async (req, res, next) => {
             email: user.email,
             password: user.password,
             role: user.role,
-        });
+        }, { transaction: t });
+        t.commit();
         res.status(201).json({ message: "User created!" });
     }
     catch (err) {
+        t.rollback();
         err.statusCode = 500;
         throw err;
     }
@@ -34,6 +38,7 @@ exports.signup = signup;
 const login = async (req, res, next) => {
     try {
         const body = req.body;
+        const t = await database_1.default.transaction();
         const result = await user_1.default.findOne({ where: { email: body.email } });
         if (!result) {
             const error = new Error("there is no user with this email");

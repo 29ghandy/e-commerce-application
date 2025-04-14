@@ -1,7 +1,7 @@
 import { describe } from "node:test";
 import sequelize from "../util/database";
 
-import { DataTypes, Sequelize } from "sequelize";
+import { DataTypes, IndexHints, Sequelize, Transaction } from "sequelize";
 
 const Product = sequelize.define("product", {
   productID: {
@@ -9,6 +9,7 @@ const Product = sequelize.define("product", {
     primaryKey: true,
     allowNull: false,
     autoIncrement: true,
+    unique: true,
   },
   name: {
     type: DataTypes.STRING,
@@ -22,7 +23,7 @@ const Product = sequelize.define("product", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  desciption: {
+  description: {
     type: DataTypes.TEXT,
     allowNull: false,
   },

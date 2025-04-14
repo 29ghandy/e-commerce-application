@@ -11,6 +11,7 @@ const Product = database_1.default.define("product", {
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
+        unique: true,
     },
     name: {
         type: sequelize_1.DataTypes.STRING,
@@ -24,7 +25,7 @@ const Product = database_1.default.define("product", {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
-    desciption: {
+    description: {
         type: sequelize_1.DataTypes.TEXT,
         allowNull: false,
     },

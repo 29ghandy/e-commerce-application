@@ -11,23 +11,25 @@ import {
   createProduct,
   viewCustomerProducts,
 } from "../controllers/customerController";
+import isAuth from "../middlewares/isAuth";
+
 const router = Router();
 
-router.get("/my-products", viewCustomerProducts);
+router.get("/my-products/:userID", viewCustomerProducts);
 
-router.get("/product/:id", viewProduct);
+router.get("/product/:productID", viewProduct);
 
 router.post("/post-product", createProduct);
 
-router.put("/product/:id", updateProduct);
+router.put("/product/:productID", updateProduct);
 
-router.delete("/product/:id", deleteProduct);
+router.delete("/product/:productID", deleteProduct);
 
 router.post("/create-order", createOrder);
 
-router.delete("/order/:id", cancelOrder);
+router.delete("/order/:orderID", cancelOrder);
 
-router.put("/order/:id", updateOrder);
+router.put("/order/:orderID", updateOrder);
 
 router.post("/checkout", checkOut);
 
