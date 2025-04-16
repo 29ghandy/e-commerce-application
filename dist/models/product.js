@@ -37,5 +37,9 @@ const Product = database_1.default.define("product", {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
+    avarege_rating: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
 });
 exports.default = Product;

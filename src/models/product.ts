@@ -35,5 +35,9 @@ const Product = sequelize.define("product", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  avarege_rating: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 export default Product;
