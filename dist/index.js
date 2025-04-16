@@ -50,6 +50,20 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     next();
 });
+app.get("/home", async (req, res, next) => {
+    /// needs pagention
+    try {
+        const products = await product_1.default.findAll();
+        if (products.length == 0)
+            res.status(202).json({ message: "no Products in inventory" });
+        else
+            res.status(200).json({ message: "Products :", products: products });
+    }
+    catch (err) {
+        err.statusCode = 500;
+        throw err;
+    }
+});
 app.use("/auth", auth_1.default);
 app.use("/customer", customer_1.default);
 app.use("/customer-service", customer_service_1.default);

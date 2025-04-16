@@ -12,6 +12,7 @@ const isAuth = (req, res, next) => {
         throw err;
     }
     const token = header.split(" ")[1];
+    console.log(token);
     let decodedToken;
     try {
         decodedToken = jsonwebtoken_1.default.verify(token, "secret");
@@ -20,12 +21,13 @@ const isAuth = (req, res, next) => {
         err.statusCode = 500;
         throw err;
     }
-    if (typeof decodedToken !== "object" || !("userId" in decodedToken)) {
+    if (typeof decodedToken !== "object" || !("userID" in decodedToken)) {
         const error = new Error("Not authenticated");
         error.statusCode = 401;
         throw error;
     }
-    req.userId = decodedToken.userId;
+    console.log(decodedToken.userID);
+    req.userID = decodedToken.userID;
     next();
 };
 exports.default = isAuth;

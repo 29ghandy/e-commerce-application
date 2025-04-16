@@ -8,6 +8,7 @@ const isAuth = (req: any, res: any, next: any) => {
     throw err;
   }
   const token = header.split(" ")[1];
+  console.log(token);
   let decodedToken: JwtPayload | string;
   try {
     decodedToken = jwt.verify(token, "secret");
@@ -15,13 +16,13 @@ const isAuth = (req: any, res: any, next: any) => {
     (err as any).statusCode = 500;
     throw err;
   }
-  if (typeof decodedToken !== "object" || !("userId" in decodedToken)) {
+  if (typeof decodedToken !== "object" || !("userID" in decodedToken)) {
     const error = new Error("Not authenticated");
     (error as any).statusCode = 401;
     throw error;
   }
-
-  req.userId = decodedToken.userId;
+  console.log(decodedToken.userID);
+  req.userID = decodedToken.userID;
   next();
 };
 export default isAuth;

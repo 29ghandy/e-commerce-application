@@ -3,11 +3,11 @@ import Product from "../models/product";
 import { reqBodyOrder, reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import message from "../models/message";
-import { ppid } from "process";
 import Order from "../models/order";
 import OrderItems from "../models/orderItem";
 
 export const viewCustomerProducts = async (req: any, res: any, next: any) => {
+  /// needs pagention
   try {
     const products = await Product.findAll({
       where: { userID: req.params.userID },
@@ -154,26 +154,11 @@ export const createOrder = async (req: any, res: any, next: any) => {
     reqBod.products = quantityMap;
     const reqBody = reqBod as reqBodyOrder;
 
-    // Step 1: Create Order
-    const order = await Order.create(
-      {
-        userID: reqBody.userID,
-        status: "unpaid",
-        totalPrice: 0,
-      },
-      { transaction: t }
-    );
-
-    const orderId = order.get().orderID;
-
-    // Step 2: Extract product IDs and quantities from object
     const productIds = [];
     for (const key of reqBody.products.keys()) {
       productIds.push(key as number);
     }
-    // console.log(productIds);
-    // console.log(productIds + "\n" + quantityMap);
-    // Step 3: Fetch all products at once
+
     const products = await Product.findAll({
       where: { productID: productIds },
       transaction: t,
@@ -199,7 +184,7 @@ export const createOrder = async (req: any, res: any, next: any) => {
       });
 
       orderItemsData.push({
-        orderID: orderId,
+        orderID: -1,
         productID: p.productID,
         quantity,
         price: p.price,
@@ -207,9 +192,22 @@ export const createOrder = async (req: any, res: any, next: any) => {
 
       totalPrice += p.price * quantity;
     }
-    // console.log(totalPrice);
-    // Step 4: Bulk insert order items
-    await OrderItems.bulkCreate(orderItemsData, { transaction: t });
+    const order = await Order.create(
+      {
+        userID: reqBody.userID,
+        status: "unpaid",
+        totalPrice: totalPrice,
+      },
+      { transaction: t }
+    );
+
+    const orderId = order.get().orderID as number;
+    console.log(orderId);
+    const items = orderItemsData.map((item) => {
+      item.orderID = orderId;
+      return item;
+    });
+    await OrderItems.bulkCreate(items, { transaction: t });
 
     // Step 5: Bulk inventory update using raw SQL
     const updateCases = inventoryUpdates
@@ -230,8 +228,6 @@ export const createOrder = async (req: any, res: any, next: any) => {
 
       await sequelize.query(updateQuery, { transaction: t });
     }
-    // Step 6: Update total price
-    await order.update({ totalPrice }, { transaction: t });
 
     await t.commit();
     res.status(201).json({ message: "order created" });
@@ -254,6 +250,7 @@ export const cancelOrder = async (req: any, res: any, next: any) => {
 };
 
 export const updateOrder = async (req: any, res: any, next: any) => {
+  const t = await sequelize.transaction();
   try {
   } catch (err) {
     (err as any).statusCode = 500;
@@ -263,6 +260,7 @@ export const updateOrder = async (req: any, res: any, next: any) => {
 };
 
 export const giveRating = async (req: any, res: any, next: any) => {
+  const t = await sequelize.transaction();
   try {
   } catch (err) {
     (err as any).statusCode = 500;
@@ -272,6 +270,7 @@ export const giveRating = async (req: any, res: any, next: any) => {
 };
 
 export const checkOut = async (req: any, res: any, next: any) => {
+  const t = await sequelize.transaction();
   try {
   } catch (err) {
     (err as any).statusCode = 500;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.forgetPassword = exports.login = exports.signup = void 0;
+exports.deleteAccount = exports.forgetPassword = exports.login = exports.signup = void 0;
 const user_1 = __importDefault(require("../models/user"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -68,6 +68,20 @@ exports.login = login;
 const forgetPassword = async (req, res, next) => {
     try {
     }
-    catch (err) { }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
 };
 exports.forgetPassword = forgetPassword;
+const deleteAccount = async (req, res, next) => {
+    try {
+    }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
+};
+exports.deleteAccount = deleteAccount;

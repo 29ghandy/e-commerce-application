@@ -15,22 +15,22 @@ import isAuth from "../middlewares/isAuth";
 
 const router = Router();
 
-router.get("/my-products/:userID", viewCustomerProducts);
+router.get("/my-products/:userID", isAuth, viewCustomerProducts);
 
-router.get("/product/:productID", viewProduct);
+router.get("/product/:productID", isAuth, viewProduct);
 
-router.post("/post-product", createProduct);
+router.post("/post-product", isAuth, createProduct);
 
-router.put("/product/:productID", updateProduct);
+router.put("/product/:productID", isAuth, updateProduct);
 
-router.delete("/product/:productID", deleteProduct);
+router.delete("/product/:productID", isAuth, deleteProduct);
 
-router.post("/create-order", createOrder);
+router.post("/create-order", isAuth, createOrder);
 
-router.delete("/order/:orderID", cancelOrder);
+router.delete("/order/:orderID", isAuth, cancelOrder);
 
-router.put("/order/:orderID", updateOrder);
+router.put("/order/:orderID", isAuth, updateOrder);
 
-router.post("/checkout", checkOut);
+router.post("/checkout", isAuth, checkOut);
 
 export default router;

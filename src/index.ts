@@ -59,6 +59,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/home", async (req: any, res: any, next: any) => {
+  /// needs pagention
   try {
     const products = await Product.findAll();
     if (products.length == 0)

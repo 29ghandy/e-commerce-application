@@ -1,15 +1,19 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const customerController_1 = require("../controllers/customerController");
+const isAuth_1 = __importDefault(require("../middlewares/isAuth"));
 const router = (0, express_1.Router)();
-router.get("/my-products/:userID", customerController_1.viewCustomerProducts);
-router.get("/product/:productID", customerController_1.viewProduct);
-router.post("/post-product", customerController_1.createProduct);
-router.put("/product/:productID", customerController_1.updateProduct);
-router.delete("/product/:productID", customerController_1.deleteProduct);
-router.post("/create-order", customerController_1.createOrder);
-router.delete("/order/:orderID", customerController_1.cancelOrder);
-router.put("/order/:orderID", customerController_1.updateOrder);
-router.post("/checkout", customerController_1.checkOut);
+router.get("/my-products/:userID", isAuth_1.default, customerController_1.viewCustomerProducts);
+router.get("/product/:productID", isAuth_1.default, customerController_1.viewProduct);
+router.post("/post-product", isAuth_1.default, customerController_1.createProduct);
+router.put("/product/:productID", isAuth_1.default, customerController_1.updateProduct);
+router.delete("/product/:productID", isAuth_1.default, customerController_1.deleteProduct);
+router.post("/create-order", isAuth_1.default, customerController_1.createOrder);
+router.delete("/order/:orderID", isAuth_1.default, customerController_1.cancelOrder);
+router.put("/order/:orderID", isAuth_1.default, customerController_1.updateOrder);
+router.post("/checkout", isAuth_1.default, customerController_1.checkOut);
 exports.default = router;

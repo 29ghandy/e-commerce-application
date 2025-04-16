@@ -3,10 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkOut = exports.updateOrder = exports.cancelOrder = exports.createOrder = exports.updateProduct = exports.deleteProduct = exports.createProduct = exports.viewProduct = exports.viewCustomerProducts = void 0;
+exports.checkOut = exports.giveRating = exports.updateOrder = exports.cancelOrder = exports.createOrder = exports.updateProduct = exports.deleteProduct = exports.createProduct = exports.viewProduct = exports.viewCustomerProducts = void 0;
 const product_1 = __importDefault(require("../models/product"));
 const database_1 = __importDefault(require("../util/database"));
+const order_1 = __importDefault(require("../models/order"));
+const orderItem_1 = __importDefault(require("../models/orderItem"));
 const viewCustomerProducts = async (req, res, next) => {
+    /// needs pagention
     try {
         const products = await product_1.default.findAll({
             where: { userID: req.params.userID },
@@ -61,14 +64,13 @@ const createProduct = async (req, res, next) => {
         }
         else {
             const productSchema = product.get();
-            productSchema.amount_in_inventory += 1;
-            product.update({
+            await product.update({
                 amount_in_inventory: productSchema.amount_in_inventory + 1,
             }, { transaction: t });
             await product.save();
-            await t.commit();
-            res.status(201).json({ message: "product created" });
         }
+        await t.commit();
+        res.status(201).json({ message: "product created" });
     }
     catch (err) {
         await t.rollback();
@@ -119,7 +121,7 @@ const updateProduct = async (req, res, next) => {
             throw err;
         }
         else {
-            product.update({
+            await product.update({
                 name: reqBody.name,
                 price: reqBody.price,
                 description: reqBody.description,
@@ -138,12 +140,129 @@ const updateProduct = async (req, res, next) => {
     }
 };
 exports.updateProduct = updateProduct;
-const createOrder = async (req, res, next) => { };
+const createOrder = async (req, res, next) => {
+    const t = await database_1.default.transaction();
+    try {
+        const reqBod = req.body;
+        const quantityMap = new Map(Object.entries(reqBod.products).map(([k, v]) => [
+            parseInt(k),
+            v,
+        ]));
+        reqBod.products = quantityMap;
+        const reqBody = reqBod;
+        const productIds = [];
+        for (const key of reqBody.products.keys()) {
+            productIds.push(key);
+        }
+        const products = await product_1.default.findAll({
+            where: { productID: productIds },
+            transaction: t,
+        });
+        let totalPrice = 0;
+        const orderItemsData = [];
+        const inventoryUpdates = [];
+        // console.log(products);
+        for (const product of products) {
+            const p = product.get();
+            const quantity = reqBody.products.get(p.productID);
+            // console.log(p.amount_in_inventory);
+            if (p.amount_in_inventory < quantity) {
+                throw new Error(`Product ${p.productID} does not have enough inventory`);
+            }
+            inventoryUpdates.push({
+                productID: p.productID,
+                newInventory: p.amount_in_inventory - quantity,
+            });
+            orderItemsData.push({
+                orderID: -1,
+                productID: p.productID,
+                quantity,
+                price: p.price,
+            });
+            totalPrice += p.price * quantity;
+        }
+        const order = await order_1.default.create({
+            userID: reqBody.userID,
+            status: "unpaid",
+            totalPrice: totalPrice,
+        }, { transaction: t });
+        const orderId = order.get().orderID;
+        console.log(orderId);
+        const items = orderItemsData.map((item) => {
+            item.orderID = orderId;
+            return item;
+        });
+        await orderItem_1.default.bulkCreate(items, { transaction: t });
+        // Step 5: Bulk inventory update using raw SQL
+        const updateCases = inventoryUpdates
+            .map((item) => `WHEN ${item.productID} THEN ${item.newInventory}`)
+            .join(" ");
+        if (inventoryUpdates.length > 0) {
+            const updateIDs = inventoryUpdates
+                .map((item) => item.productID)
+                .join(", ");
+            const updateQuery = `
+        UPDATE \`Products\`
+        SET \`amount_in_inventory\` = CASE \`productID\`
+          ${updateCases}
+        END
+        WHERE \`productID\` IN (${updateIDs})
+      `;
+            await database_1.default.query(updateQuery, { transaction: t });
+        }
+        await t.commit();
+        res.status(201).json({ message: "order created" });
+    }
+    catch (err) {
+        await t.rollback();
+        err.statusCode = 500;
+        console.error(err);
+        throw err;
+    }
+};
 exports.createOrder = createOrder;
-const cancelOrder = async (req, res, next) => { };
+const cancelOrder = async (req, res, next) => {
+    const t = await database_1.default.transaction();
+    try {
+    }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
+};
 exports.cancelOrder = cancelOrder;
-const updateOrder = async (req, res, next) => { };
+const updateOrder = async (req, res, next) => {
+    const t = await database_1.default.transaction();
+    try {
+    }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
+};
 exports.updateOrder = updateOrder;
-const checkOut = async (req, res, next) => { };
+const giveRating = async (req, res, next) => {
+    const t = await database_1.default.transaction();
+    try {
+    }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
+};
+exports.giveRating = giveRating;
+const checkOut = async (req, res, next) => {
+    const t = await database_1.default.transaction();
+    try {
+    }
+    catch (err) {
+        err.statusCode = 500;
+        console.log(err);
+        throw err;
+    }
+};
 exports.checkOut = checkOut;
 // c cs

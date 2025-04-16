@@ -18,7 +18,11 @@ const Order = database_1.default.define("orders", {
     },
     status: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false
-    }
+        allowNull: false,
+    },
+    totalPrice: {
+        type: sequelize_1.DataTypes.INTEGER,
+        allowNull: false,
+    },
 });
 exports.default = Order;
