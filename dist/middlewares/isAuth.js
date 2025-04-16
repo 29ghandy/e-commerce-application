@@ -12,7 +12,6 @@ const isAuth = (req, res, next) => {
         throw err;
     }
     const token = header.split(" ")[1];
-    console.log(token);
     let decodedToken;
     try {
         decodedToken = jsonwebtoken_1.default.verify(token, "secret");
@@ -26,7 +25,6 @@ const isAuth = (req, res, next) => {
         error.statusCode = 401;
         throw error;
     }
-    console.log(decodedToken.userID);
     req.userID = decodedToken.userID;
     next();
 };

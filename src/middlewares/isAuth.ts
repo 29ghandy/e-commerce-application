@@ -8,8 +8,7 @@ const isAuth = (req: any, res: any, next: any) => {
     throw err;
   }
   const token = header.split(" ")[1];
-  console.log(token);
-  let decodedToken: JwtPayload | string;
+  let decodedToken: any;
   try {
     decodedToken = jwt.verify(token, "secret");
   } catch (err) {
@@ -21,7 +20,6 @@ const isAuth = (req: any, res: any, next: any) => {
     (error as any).statusCode = 401;
     throw error;
   }
-  console.log(decodedToken.userID);
   req.userID = decodedToken.userID;
   next();
 };

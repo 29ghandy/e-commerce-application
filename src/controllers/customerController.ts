@@ -242,7 +242,21 @@ export const createOrder = async (req: any, res: any, next: any) => {
 export const cancelOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
+    const orderID = req.params.orderID;
+    const order = await Order.findByPk(orderID);
+    const inOrder = order?.get();
+    if (inOrder.status === "unpaid") {
+      await Order.destroy({ where: { orderID: orderID }, transaction: t });
+      t.commit();
+      res.status(200).json({ message: "order canceled" });
+    } else {
+      res.status(405).json({
+        message:
+          "the order is payed please contact the customer service if you want to delete it",
+      });
+    }
   } catch (err) {
+    t.rollback();
     (err as any).statusCode = 500;
     console.log(err);
     throw err;
