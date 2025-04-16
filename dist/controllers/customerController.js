@@ -83,7 +83,6 @@ exports.createProduct = createProduct;
 const deleteProduct = async (req, res, next) => {
     const t = await database_1.default.transaction();
     try {
-        const reqBody = req.body;
         const product = await product_1.default.findByPk(req.params.productID, {
             transaction: t,
         });

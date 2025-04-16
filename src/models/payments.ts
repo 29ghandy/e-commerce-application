@@ -18,4 +18,9 @@ const Payments = sequelize.define("payments", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  amount: {
+    type: DataTypes.DOUBLE,
+    allowNull: false,
+  },
 });
+export default Payments;

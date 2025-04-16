@@ -83,7 +83,6 @@ export const createProduct = async (req: any, res: any, next: any) => {
 export const deleteProduct = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
-    const reqBody = req.body as reqBodyProuduct;
 
     const product = await Product.findByPk(req.params.productID, {
       transaction: t,

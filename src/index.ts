@@ -12,6 +12,7 @@ import Rating from "./models/rating";
 import customerRoutes from "./routes/customer";
 import customerServiceRoutes from "./routes/customer-service";
 import message from "./models/message";
+import Payment from "./models/payments";
 
 const app = express();
 // relationships
@@ -48,6 +49,8 @@ Message.belongsTo(Chat, { foreignKey: "chatID" });
 Product.hasMany(Rating, { foreignKey: "productID", onDelete: "CASCADE" });
 Rating.belongsTo(Product, { foreignKey: "productID" });
 
+Order.hasOne(Payment, { foreignKey: "productID", onDelete: "CASCADE" });
+Payment.belongsTo(Order);
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
