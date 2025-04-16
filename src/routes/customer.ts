@@ -2,15 +2,17 @@ import { Router } from "express";
 import { signup, login, forgetPassword } from "../controllers/authContorller";
 import {
   viewProduct,
-  createOrder,
-  cancelOrder,
-  checkOut,
-  updateOrder,
   updateProduct,
   deleteProduct,
   createProduct,
   viewCustomerProducts,
 } from "../controllers/customerController";
+import {
+  createOrder,
+  cancelOrder,
+  updateOrder,
+  checkOut,
+} from "../controllers/orderController";
 import isAuth from "../middlewares/isAuth";
 
 const router = Router();
