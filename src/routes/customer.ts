@@ -6,7 +6,7 @@ import {
   deleteProduct,
   createProduct,
   viewCustomerProducts,
-} from "../controllers/customerController";
+} from "../controllers/productController";
 import {
   createOrder,
   cancelOrder,
