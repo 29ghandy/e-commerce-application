@@ -77,6 +77,13 @@ const forgetPassword = async (req, res, next) => {
 exports.forgetPassword = forgetPassword;
 const deleteAccount = async (req, res, next) => {
     try {
+        const userId = req.params.userID;
+        const user = await user_1.default.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        await user.destroy();
+        return res.status(200).json({ message: "Account deleted successfully." });
     }
     catch (err) {
         err.statusCode = 500;

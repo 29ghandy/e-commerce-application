@@ -1,10 +1,8 @@
-import { or, where } from "sequelize";
 import Product from "../models/product";
 import { reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
+import Rating from "../models/rating";
 import message from "../models/message";
-import Order from "../models/order";
-import OrderItems from "../models/orderItem";
 
 export const viewCustomerProducts = async (req: any, res: any, next: any) => {
   /// needs pagention
@@ -12,9 +10,13 @@ export const viewCustomerProducts = async (req: any, res: any, next: any) => {
     const products = await Product.findAll({
       where: { userID: req.params.userID },
     });
-    res
-      .status(201)
-      .json({ message: "this is ur products", products: products });
+    if (!products) {
+      res.status(404).json({ message: "no products for this user found" });
+    } else {
+      res
+        .status(201)
+        .json({ message: "this is ur products", products: products });
+    }
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);
@@ -24,10 +26,28 @@ export const viewCustomerProducts = async (req: any, res: any, next: any) => {
 
 export const viewProduct = async (req: any, res: any, next: any) => {
   try {
-    const product = await Product.findAll({
+    const product = await Product.findOne({
       where: { userID: req.params.productID },
     });
-    res.status(201).json({ message: "product details", product: product });
+    if (!product) {
+      res.status(404).json({ message: "no such a product" });
+    } else {
+      const ratings = await Rating.findAll({
+        where: { productID: req.params.productID },
+      });
+      const n: number = ratings.length;
+      let sum: number = 0;
+      for (const rating of ratings) {
+        const tmp = rating.get();
+        sum += tmp.stars;
+      }
+
+      res.status(201).json({
+        message: "product details",
+        product: product,
+        rating: sum / n,
+      });
+    }
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);
@@ -142,6 +162,16 @@ export const updateProduct = async (req: any, res: any, next: any) => {
 export const giveRating = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
+    const numberOfstars = req.body.numberOfstars;
+    const review_message = req.body.review_message;
+    const productID = req.body.productID;
+    await Rating.create({
+      productID: productID,
+      stars: numberOfstars,
+      review_message: review_message,
+    });
+
+    res.status(202).json({ message: "Thank u for the review!!" });
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);

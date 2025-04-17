@@ -1,4 +1,3 @@
-import { or, where } from "sequelize";
 import Product from "../models/product";
 import { reqBodyOrder, reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
@@ -21,6 +20,11 @@ export const createOrder = async (req: any, res: any, next: any) => {
     const productIds = [];
     for (const key of reqBody.products.keys()) {
       productIds.push(key as number);
+    }
+    if (productIds.length == 0) {
+      const err = new Error("no products sent !");
+      (err as any).statusCode = 404;
+      throw err;
     }
 
     const products = await Product.findAll({
@@ -109,15 +113,22 @@ export const cancelOrder = async (req: any, res: any, next: any) => {
     const orderID = req.params.orderID;
     const order = await Order.findByPk(orderID);
     const inOrder = order?.get();
-    if (inOrder.status === "unpaid") {
-      await Order.destroy({ where: { orderID: orderID }, transaction: t });
-      t.commit();
-      res.status(200).json({ message: "order canceled" });
+    if (!order) {
+      const err = new Error("can find the order");
+      (err as any).statusCode = 404;
+      throw err;
     } else {
-      res.status(405).json({
-        message:
-          "the order is payed please contact the customer service if you want to delete it",
-      });
+      if (inOrder.status === "unpaid") {
+        await Order.destroy({ where: { orderID: orderID }, transaction: t });
+        t.commit();
+        res.status(200).json({ message: "order canceled" });
+      } else {
+        const err = new Error(
+          "the order is paid please contact the customer service if you want to delete it"
+        );
+        (err as any).statusCode = 404;
+        throw err;
+      }
     }
   } catch (err) {
     t.rollback();
@@ -129,8 +140,12 @@ export const cancelOrder = async (req: any, res: any, next: any) => {
 
 export const updateOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
+  /* 
+    1- get the product
+  */
   try {
   } catch (err) {
+    t.rollback();
     (err as any).statusCode = 500;
     console.log(err);
     throw err;

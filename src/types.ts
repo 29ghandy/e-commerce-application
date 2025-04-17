@@ -15,3 +15,8 @@ export type reqBodyOrder = {
   products: Map<Number, Number>; // id , f
   userID: number;
 };
+export type reqUpdateOrder = {
+  orderID: number;
+  removedProducts: Map<Number, Number>;
+  newProducts: Map<Number, Number>;
+};

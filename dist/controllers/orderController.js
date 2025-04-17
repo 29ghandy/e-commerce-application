@@ -95,15 +95,22 @@ const cancelOrder = async (req, res, next) => {
         const orderID = req.params.orderID;
         const order = await order_1.default.findByPk(orderID);
         const inOrder = order?.get();
-        if (inOrder.status === "unpaid") {
-            await order_1.default.destroy({ where: { orderID: orderID }, transaction: t });
-            t.commit();
-            res.status(200).json({ message: "order canceled" });
+        if (!order) {
+            const err = new Error("can find the order");
+            err.statusCode = 404;
+            throw err;
         }
         else {
-            res.status(405).json({
-                message: "the order is payed please contact the customer service if you want to delete it",
-            });
+            if (inOrder.status === "unpaid") {
+                await order_1.default.destroy({ where: { orderID: orderID }, transaction: t });
+                t.commit();
+                res.status(200).json({ message: "order canceled" });
+            }
+            else {
+                res.status(405).json({
+                    message: "the order is paid please contact the customer service if you want to delete it",
+                });
+            }
         }
     }
     catch (err) {
@@ -116,9 +123,11 @@ const cancelOrder = async (req, res, next) => {
 exports.cancelOrder = cancelOrder;
 const updateOrder = async (req, res, next) => {
     const t = await database_1.default.transaction();
+    //
     try {
     }
     catch (err) {
+        t.rollback();
         err.statusCode = 500;
         console.log(err);
         throw err;

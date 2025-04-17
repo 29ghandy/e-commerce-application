@@ -81,6 +81,18 @@ export const forgetPassword = async (req: any, res: any, next: any) => {
 };
 export const deleteAccount = async (req: any, res: any, next: any) => {
   try {
+    const userId = req.params.userID;
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      const err = new Error("can 't find the user");
+      (err as any).statusCode = 404;
+      throw err;
+    }
+
+    await user.destroy();
+    return res.status(200).json({ message: "Account deleted successfully." });
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);
