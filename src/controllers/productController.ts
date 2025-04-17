@@ -3,6 +3,7 @@ import { reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import Rating from "../models/rating";
 import message from "../models/message";
+import { where } from "sequelize";
 
 export const viewCustomerProducts = async (req: any, res: any, next: any) => {
   /// needs pagention
@@ -41,11 +42,13 @@ export const viewProduct = async (req: any, res: any, next: any) => {
         const tmp = rating.get();
         sum += tmp.stars;
       }
+      const p = product.get();
+      sum += p.avarege_rating;
 
       res.status(201).json({
         message: "product details",
         product: product,
-        rating: sum / n,
+        rating: sum / (n + 1),
       });
     }
   } catch (err) {
@@ -77,6 +80,7 @@ export const createProduct = async (req: any, res: any, next: any) => {
           imageUrl: reqBody.imageUrl,
           userID: reqBody.userID,
           amount_in_inventory: 1,
+          avarege_rating: 5,
         },
         { transaction: t }
       );
@@ -162,15 +166,28 @@ export const updateProduct = async (req: any, res: any, next: any) => {
 export const giveRating = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
-    const numberOfstars = req.body.numberOfstars;
+    const numberOfstars = req.body.stars;
     const review_message = req.body.review_message;
-    const productID = req.body.productID;
+    const productID = req.params.productID as number;
     await Rating.create({
       productID: productID,
       stars: numberOfstars,
       review_message: review_message,
     });
-
+    const ratings = await Rating.findAll({
+      where: {
+        productID: productID,
+      },
+    });
+    let sum = 0.0;
+    const n = ratings.length;
+    for (const r of ratings) {
+      const tmp = r.get();
+      sum += tmp.stars;
+    }
+    sum /= n;
+    const p = await Product.findOne({ where: { productID: productID } });
+    await p?.update({ avarge_rating: sum });
     res.status(202).json({ message: "Thank u for the review!!" });
   } catch (err) {
     (err as any).statusCode = 500;

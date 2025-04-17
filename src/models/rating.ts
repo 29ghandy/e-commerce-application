@@ -13,7 +13,7 @@ const Rating = sequelize.define("rating", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  starts: {
+  stars: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
