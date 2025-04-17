@@ -28,7 +28,7 @@ router.put("/product/:productID", isAuth, updateProduct);
 
 router.delete("/product/:productID", isAuth, deleteProduct);
 
-router.post("/product/give-rating/:productID", isAuth, giveRating);
+router.post("/product/give-review/:productID", isAuth, giveRating);
 
 router.post("/create-order", isAuth, createOrder);
 
