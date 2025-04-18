@@ -80,7 +80,9 @@ const deleteAccount = async (req, res, next) => {
         const userId = req.params.userID;
         const user = await user_1.default.findByPk(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found." });
+            const err = new Error("can 't find the user");
+            err.statusCode = 404;
+            throw err;
         }
         await user.destroy();
         return res.status(200).json({ message: "Account deleted successfully." });

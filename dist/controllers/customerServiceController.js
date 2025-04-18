@@ -13,7 +13,9 @@ const cancelOrder = async (req, res, next) => {
         const order = await order_1.default.findByPk(orderID);
         const inOrder = order?.get();
         if (!order) {
-            res.status(200).json({ message: "order not found" });
+            const err = new Error("the order is not found");
+            err.statusCode = 404;
+            throw err;
         }
         else {
             await order_1.default.destroy({ where: { orderID: orderID }, transaction: t });

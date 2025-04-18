@@ -37,18 +37,18 @@ export const viewProduct = async (req: any, res: any, next: any) => {
         where: { productID: req.params.productID },
       });
       const n: number = ratings.length;
-      let sum: number = 0;
+      let sum: number = 0.0;
       for (const rating of ratings) {
         const tmp = rating.get();
         sum += tmp.stars;
       }
       const p = product.get();
-      sum += p.avarege_rating;
-
+      sum += 5;
+      sum /= (n + 1) as number;
       res.status(201).json({
         message: "product details",
         product: product,
-        rating: sum / (n + 1),
+        rating: sum,
       });
     }
   } catch (err) {
@@ -184,11 +184,15 @@ export const giveRating = async (req: any, res: any, next: any) => {
     for (const r of ratings) {
       const tmp = r.get();
       sum += tmp.stars;
+      console.log(tmp.stars);
     }
-    sum /= n;
-    const p = await Product.findOne({ where: { productID: productID } });
-    await p?.update({ avarge_rating: sum });
-    res.status(202).json({ message: "Thank u for the review!!" });
+    sum += 5;
+    sum /= (n + 1) as number;
+    await Product.update(
+      { avarege_rating: sum },
+      { where: { productID: productID } }
+    );
+    res.status(202).json({ message: "Thank u for the review!!", rating: sum });
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);

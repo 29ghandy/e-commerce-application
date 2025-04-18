@@ -22,6 +22,11 @@ const createOrder = async (req, res, next) => {
         for (const key of reqBody.products.keys()) {
             productIds.push(key);
         }
+        if (productIds.length == 0) {
+            const err = new Error("no products sent !");
+            err.statusCode = 404;
+            throw err;
+        }
         const products = await product_1.default.findAll({
             where: { productID: productIds },
             transaction: t,
@@ -107,9 +112,9 @@ const cancelOrder = async (req, res, next) => {
                 res.status(200).json({ message: "order canceled" });
             }
             else {
-                res.status(405).json({
-                    message: "the order is paid please contact the customer service if you want to delete it",
-                });
+                const err = new Error("the order is paid please contact the customer service if you want to delete it");
+                err.statusCode = 404;
+                throw err;
             }
         }
     }
@@ -123,7 +128,9 @@ const cancelOrder = async (req, res, next) => {
 exports.cancelOrder = cancelOrder;
 const updateOrder = async (req, res, next) => {
     const t = await database_1.default.transaction();
-    //
+    /*
+      1- get the product
+    */
     try {
     }
     catch (err) {

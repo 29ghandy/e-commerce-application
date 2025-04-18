@@ -16,7 +16,7 @@ const Rating = database_1.default.define("rating", {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
-    starts: {
+    stars: {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
