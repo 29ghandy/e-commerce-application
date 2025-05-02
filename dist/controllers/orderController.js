@@ -40,12 +40,8 @@ const createOrder = async (req, res, next) => {
             const quantity = reqBody.products.get(p.productID);
             // console.log(p.amount_in_inventory);
             if (p.amount_in_inventory < quantity) {
-                throw new Error(`Product ${p.productID} does not have enough inventory`);
+                throw new Error(`Product ${p.name} does not have enough inventory`);
             }
-            inventoryUpdates.push({
-                productID: p.productID,
-                newInventory: p.amount_in_inventory - quantity,
-            });
             orderItemsData.push({
                 orderID: -1,
                 productID: p.productID,
@@ -60,29 +56,11 @@ const createOrder = async (req, res, next) => {
             totalPrice: totalPrice,
         }, { transaction: t });
         const orderId = order.get().orderID;
-        console.log(orderId);
         const items = orderItemsData.map((item) => {
             item.orderID = orderId;
             return item;
         });
         await orderItem_1.default.bulkCreate(items, { transaction: t });
-        // Step 5: Bulk inventory update using raw SQL
-        const updateCases = inventoryUpdates
-            .map((item) => `WHEN ${item.productID} THEN ${item.newInventory}`)
-            .join(" ");
-        if (inventoryUpdates.length > 0) {
-            const updateIDs = inventoryUpdates
-                .map((item) => item.productID)
-                .join(", ");
-            const updateQuery = `
-          UPDATE \`Products\`
-          SET \`amount_in_inventory\` = CASE \`productID\`
-            ${updateCases}
-          END
-          WHERE \`productID\` IN (${updateIDs})
-        `;
-            await database_1.default.query(updateQuery, { transaction: t });
-        }
         await t.commit();
         res.status(201).json({ message: "order created" });
     }
@@ -128,10 +106,62 @@ const cancelOrder = async (req, res, next) => {
 exports.cancelOrder = cancelOrder;
 const updateOrder = async (req, res, next) => {
     const t = await database_1.default.transaction();
-    /*
-      1- get the product
-    */
+    // get order , change or remove the products , bulk insert
     try {
+        const orderID = req.params.orderID;
+        const order = await order_1.default.findByPk(orderID);
+        if (!order) {
+            const err = new Error("order doesn't exist");
+            err.statusCode = 404;
+            throw err;
+        }
+        else {
+            /**
+             * - give new order.
+             * - bulk insert the new order.
+             */
+            const reqBod = req.body;
+            const quantityMap = new Map(Object.entries(reqBod.products).map(([k, v]) => [
+                parseInt(k),
+                v,
+            ]));
+            reqBod.products = quantityMap;
+            const productIDs = [];
+            for (const productID of quantityMap.keys()) {
+                productIDs.push(productID);
+            }
+            await orderItem_1.default.destroy({
+                where: {
+                    orderID: orderID,
+                },
+            });
+            const prods = await product_1.default.findAll({
+                where: {
+                    productID: productIDs,
+                },
+            });
+            const orderItemsData = [];
+            for (const prod of prods) {
+                const product = prod.get();
+                const amount = quantityMap.get(product.productID);
+                if (amount != null) {
+                    if (product.quantity < amount) {
+                        if (product.amount_in_inventory < amount) {
+                            throw new Error(`Product ${product.name} does not have enough inventory`);
+                        }
+                    }
+                }
+                orderItemsData.push({
+                    orderID: orderID,
+                    productID: product.productID,
+                    quantity: amount,
+                    price: product.price,
+                });
+            }
+            await orderItem_1.default.bulkCreate(orderItemsData, { transaction: t });
+            await t.commit();
+            res.status(201).json({ message: "order updated" });
+        }
     }
     catch (err) {
         t.rollback();
@@ -144,6 +174,23 @@ exports.updateOrder = updateOrder;
 const checkOut = async (req, res, next) => {
     const t = await database_1.default.transaction();
     try {
+        //   // Step 5: Bulk inventory update using raw SQL
+        //   const updateCases = inventoryUpdates
+        //   .map((item) => `WHEN ${item.productID} THEN ${item.newInventory}`)
+        //   .join(" ");
+        // if (inventoryUpdates.length > 0) {
+        //   const updateIDs = inventoryUpdates
+        //     .map((item) => item.productID)
+        //     .join(", ");
+        //   const updateQuery = `
+        //       UPDATE \`Products\`
+        //       SET \`amount_in_inventory\` = CASE \`productID\`
+        //         ${updateCases}
+        //       END
+        //       WHERE \`productID\` IN (${updateIDs})
+        //     `;
+        //   await sequelize.query(updateQuery, { transaction: t });
+        // }
     }
     catch (err) {
         err.statusCode = 500;

@@ -13,10 +13,17 @@ import customerRoutes from "./routes/customer";
 import customerServiceRoutes from "./routes/customer-service";
 import message from "./models/message";
 import Payment from "./models/payments";
-
+import { Server } from "socket.io"; // ✅ import socket.io
+import http from "http";
 const app = express();
 // relationships
-
+const server = http.createServer(app); // ✅ create HTTP server from Express app
+const io = new Server(server, {
+  cors: {
+    origin: "*", // change this to your frontend domain in production
+    methods: ["GET", "POST"],
+  },
+});
 app.use(bodyParser.json());
 // One User has One Order
 User.hasOne(Order, {
@@ -82,6 +89,6 @@ app.use("/customer-service", customerServiceRoutes);
 sequelize
   .sync()
   .then((res) => {
-    app.listen(3000);
+    server.listen(3000);
   })
   .catch((err) => console.log(err));

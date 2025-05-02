@@ -17,8 +17,17 @@ const rating_1 = __importDefault(require("./models/rating"));
 const customer_1 = __importDefault(require("./routes/customer"));
 const customer_service_1 = __importDefault(require("./routes/customer-service"));
 const payments_1 = __importDefault(require("./models/payments"));
+const socket_io_1 = require("socket.io"); // ✅ import socket.io
+const http_1 = __importDefault(require("http"));
 const app = (0, express_1.default)();
 // relationships
+const server = http_1.default.createServer(app); // ✅ create HTTP server from Express app
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: "*", // change this to your frontend domain in production
+        methods: ["GET", "POST"],
+    },
+});
 app.use(body_parser_1.default.json());
 // One User has One Order
 user_1.default.hasOne(order_1.default, {
@@ -73,6 +82,6 @@ app.use("/customer-service", customer_service_1.default);
 database_1.default
     .sync()
     .then((res) => {
-    app.listen(3000);
+    server.listen(3000);
 })
     .catch((err) => console.log(err));
