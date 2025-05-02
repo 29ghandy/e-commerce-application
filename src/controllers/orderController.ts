@@ -3,8 +3,6 @@ import { reqBodyOrder, reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import Order from "../models/order";
 import OrderItems from "../models/orderItem";
-import { where } from "sequelize";
-import message from "../models/message";
 
 export const createOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
@@ -151,6 +149,7 @@ export const updateOrder = async (req: any, res: any, next: any) => {
         },
       });
       const orderItemsData = [];
+      let totalPrice = 0.0;
       for (const prod of prods) {
         const product = prod.get();
         const amount = quantityMap.get(product.productID)! as number;
@@ -169,10 +168,15 @@ export const updateOrder = async (req: any, res: any, next: any) => {
           quantity: amount,
           price: product.price,
         });
+        totalPrice += product.price * amount;
       }
+
+      await order.update({ totalPrice: totalPrice }, { transaction: t });
       await OrderItems.bulkCreate(orderItemsData, { transaction: t });
       await t.commit();
-      res.status(201).json({ message: "order updated" });
+      res
+        .status(201)
+        .json({ message: "order updated", totalPrice: totalPrice });
     }
   } catch (err) {
     t.rollback();
