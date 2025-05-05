@@ -7,13 +7,12 @@ import Stripe from "stripe";
 import { or } from "sequelize";
 import message from "../models/message";
 import Payments from "../models/payments";
+import dotenv from "dotenv";
+dotenv.config();
 
-const stripe = new Stripe(
-  "sk_test_51RLT0gRcTWiFDinlXKVkQytkkOIp8dv8LPU2zHuSr79MoHJDg0DXOJx0l8ZemFNFzthj83ofKdkvDKRi20HEORTE00NUzWVD9c",
-  {
-    apiVersion: "2025-04-30.basil",
-  }
-);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: "2025-04-30.basil",
+});
 export const createOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
