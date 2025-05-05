@@ -4,10 +4,19 @@ import bcrypt from "bcryptjs";
 import { reqBodyAuth } from "../types";
 import jwt from "jsonwebtoken";
 import sequelize from "../util/database";
+import { validationResult } from "express-validator";
+import { console } from "inspector";
 
 export const signup = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log(errors);
+      const err = new Error("data validation failed");
+      (err as any).status = 404;
+      throw err;
+    }
     const body = req.body as reqBodyAuth;
     const hashedPassword = await bcrypt.hash(body.password, 12);
     const user = {

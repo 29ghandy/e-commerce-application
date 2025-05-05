@@ -2,8 +2,7 @@ import Product from "../models/product";
 import { reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import Rating from "../models/rating";
-import message from "../models/message";
-import { where } from "sequelize";
+import { validationResult } from "express-validator";
 
 export const viewCustomerProducts = async (req: any, res: any, next: any) => {
   /// needs pagention
@@ -61,6 +60,11 @@ export const viewProduct = async (req: any, res: any, next: any) => {
 export const createProduct = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log(errors);
+      throw new Error("input invalid");
+    }
     const reqBody = req.body as reqBodyProuduct;
     const product = await Product.findOne({
       where: {

@@ -15,6 +15,7 @@ import {
   checkOut,
 } from "../controllers/orderController";
 import isAuth from "../middlewares/isAuth";
+import { validateProduct } from "../middlewares/validation";
 
 const router = Router();
 
@@ -22,7 +23,7 @@ router.get("/my-products/:userID", isAuth, viewCustomerProducts);
 
 router.get("/product/:productID", isAuth, viewProduct);
 
-router.post("/post-product", isAuth, createProduct);
+router.post("/post-product", validateProduct as any, isAuth, createProduct);
 
 router.put("/product/:productID", isAuth, updateProduct);
 
