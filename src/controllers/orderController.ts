@@ -3,7 +3,16 @@ import { reqBodyOrder, reqBodyProuduct } from "../types";
 import sequelize from "../util/database";
 import Order from "../models/order";
 import OrderItems from "../models/orderItem";
+import Stripe from "stripe";
+import { or } from "sequelize";
+import message from "../models/message";
 
+const stripe = new Stripe(
+  "sk_test_51RLT0gRcTWiFDinlXKVkQytkkOIp8dv8LPU2zHuSr79MoHJDg0DXOJx0l8ZemFNFzthj83ofKdkvDKRi20HEORTE00NUzWVD9c",
+  {
+    apiVersion: "2025-04-30.basil",
+  }
+);
 export const createOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
@@ -34,7 +43,7 @@ export const createOrder = async (req: any, res: any, next: any) => {
 
     let totalPrice = 0;
     const orderItemsData = [];
-    const inventoryUpdates: { productID: number; newInventory: number }[] = [];
+
     // console.log(products);
     for (const product of products) {
       const p = product.get();
@@ -186,25 +195,63 @@ export const updateOrder = async (req: any, res: any, next: any) => {
   }
 };
 export const checkOut = async (req: any, res: any, next: any) => {
+  // orderID, total price
   const t = await sequelize.transaction();
   try {
-    //   // Step 5: Bulk inventory update using raw SQL
-    //   const updateCases = inventoryUpdates
-    //   .map((item) => `WHEN ${item.productID} THEN ${item.newInventory}`)
-    //   .join(" ");
-    // if (inventoryUpdates.length > 0) {
-    //   const updateIDs = inventoryUpdates
-    //     .map((item) => item.productID)
-    //     .join(", ");
-    //   const updateQuery = `
-    //       UPDATE \`Products\`
-    //       SET \`amount_in_inventory\` = CASE \`productID\`
-    //         ${updateCases}
-    //       END
-    //       WHERE \`productID\` IN (${updateIDs})
-    //     `;
-    //   await sequelize.query(updateQuery, { transaction: t });
-    // }
+    const id = req.params.orderID as number;
+    const order = await Order.findByPk(id);
+    if (!order) {
+      const err = new Error("no order found");
+      (err as any).statusCode = 404;
+      throw err;
+    }
+    const od = order.get();
+    const payment = await stripe.paymentIntents.create({
+      amount: od.totalPrice,
+      currency: "usd",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+    await Order.update({ status: "paied" }, { where: { orderID: id } });
+    const orderItems = await OrderItems.findAll({ where: { orderID: id } });
+    const inventoryUpdates: { productID: number; quanitiy: number }[] = [];
+    const ids = [];
+    const mp = new Map<number, number>();
+    for (var item of orderItems) {
+      const or = item.get();
+      mp.set(or.productID, or.quanitiy);
+      ids.push({ id: or.productID });
+    }
+    const products = await Product.findAll({ where: { productID: ids } });
+    for (var p of products) {
+      const prod = p.get();
+      const amount = mp.get(prod.productID)!;
+      inventoryUpdates.push({
+        productID: prod.quanitiy,
+        quanitiy: prod.quanitiy - amount,
+      });
+    }
+    // Step 5: Bulk inventory update using raw SQL
+    const updateCases = inventoryUpdates
+      .map((item) => `WHEN ${item.productID} THEN ${item.quanitiy}`)
+      .join(" ");
+    if (inventoryUpdates.length > 0) {
+      const updateIDs = inventoryUpdates
+        .map((item) => item.productID)
+        .join(", ");
+      const updateQuery = `
+          UPDATE \`Products\`
+          SET \`amount_in_inventory\` = CASE \`productID\`
+            ${updateCases}
+          END
+          WHERE \`productID\` IN (${updateIDs})
+        `;
+      await sequelize.query(updateQuery, { transaction: t });
+    }
+    res
+      .status(200)
+      .json({ client: payment.client_secret, message: "payment done" });
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);
