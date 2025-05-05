@@ -59,7 +59,7 @@ Message.belongsTo(Chat, { foreignKey: "chatID" });
 Product.hasMany(Rating, { foreignKey: "productID", onDelete: "CASCADE" });
 Rating.belongsTo(Product, { foreignKey: "productID" });
 
-Order.hasOne(Payment, { foreignKey: "productID", onDelete: "CASCADE" });
+Order.hasOne(Payment, { foreignKey: "orderID", onDelete: "CASCADE" });
 Payment.belongsTo(Order);
 
 app.use((req, res, next) => {

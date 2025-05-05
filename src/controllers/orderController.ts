@@ -6,6 +6,7 @@ import OrderItems from "../models/orderItem";
 import Stripe from "stripe";
 import { or } from "sequelize";
 import message from "../models/message";
+import Payments from "../models/payments";
 
 const stripe = new Stripe(
   "sk_test_51RLT0gRcTWiFDinlXKVkQytkkOIp8dv8LPU2zHuSr79MoHJDg0DXOJx0l8ZemFNFzthj83ofKdkvDKRi20HEORTE00NUzWVD9c",
@@ -195,17 +196,20 @@ export const updateOrder = async (req: any, res: any, next: any) => {
   }
 };
 export const checkOut = async (req: any, res: any, next: any) => {
-  // orderID, total price
   const t = await sequelize.transaction();
+
   try {
-    const id = req.params.orderID as number;
+    const id = Number(req.params.orderID);
     const order = await Order.findByPk(id);
     if (!order) {
-      const err = new Error("no order found");
+      const err = new Error("No order found");
       (err as any).statusCode = 404;
       throw err;
     }
+
     const od = order.get();
+
+    // Step 1: Create PaymentIntent with Stripe
     const payment = await stripe.paymentIntents.create({
       amount: od.totalPrice,
       currency: "usd",
@@ -213,48 +217,80 @@ export const checkOut = async (req: any, res: any, next: any) => {
         enabled: true,
       },
     });
-    await Order.update({ status: "paied" }, { where: { orderID: id } });
+
+    // Step 2: Record the payment
+    await Payments.create(
+      {
+        orderID: id,
+        userID: od.userID,
+        amount: od.totalPrice,
+      },
+      { transaction: t }
+    );
+
+    // Step 3: Update order status
+    await Order.update(
+      { status: "paid" },
+      { where: { orderID: id }, transaction: t }
+    );
+
+    // Step 4: Fetch order items
     const orderItems = await OrderItems.findAll({ where: { orderID: id } });
-    const inventoryUpdates: { productID: number; quanitiy: number }[] = [];
-    const ids = [];
-    const mp = new Map<number, number>();
-    for (var item of orderItems) {
+
+    const inventoryUpdates: { productID: number; quantity: number }[] = [];
+    const ids: number[] = [];
+    const productQuantityMap = new Map<number, number>();
+
+    for (const item of orderItems) {
       const or = item.get();
-      mp.set(or.productID, or.quanitiy);
-      ids.push({ id: or.productID });
+      productQuantityMap.set(or.productID, or.quantity);
+      ids.push(or.productID);
     }
+
+    // Step 5: Fetch products
     const products = await Product.findAll({ where: { productID: ids } });
-    for (var p of products) {
+
+    for (const p of products) {
       const prod = p.get();
-      const amount = mp.get(prod.productID)!;
+      const amount = productQuantityMap.get(prod.productID)!;
+      const updatedQuantity = prod.amount_in_inventory - amount;
       inventoryUpdates.push({
-        productID: prod.quanitiy,
-        quanitiy: prod.quanitiy - amount,
+        productID: prod.productID,
+        quantity: updatedQuantity,
       });
     }
-    // Step 5: Bulk inventory update using raw SQL
-    const updateCases = inventoryUpdates
-      .map((item) => `WHEN ${item.productID} THEN ${item.quanitiy}`)
-      .join(" ");
+
+    // Step 6: Bulk inventory update using raw SQL
     if (inventoryUpdates.length > 0) {
+      const updateCases = inventoryUpdates
+        .map((item) => `WHEN ${item.productID} THEN ${item.quantity}`)
+        .join(" ");
+
       const updateIDs = inventoryUpdates
         .map((item) => item.productID)
         .join(", ");
+
       const updateQuery = `
-          UPDATE \`Products\`
-          SET \`amount_in_inventory\` = CASE \`productID\`
-            ${updateCases}
-          END
-          WHERE \`productID\` IN (${updateIDs})
-        `;
+        UPDATE \`Products\`
+        SET \`amount_in_inventory\` = CASE \`productID\`
+          ${updateCases}
+        END
+        WHERE \`productID\` IN (${updateIDs})
+      `;
+
       await sequelize.query(updateQuery, { transaction: t });
     }
-    res
-      .status(200)
-      .json({ client: payment.client_secret, message: "payment done" });
+
+    // Commit transaction
+    await t.commit();
+
+    res.status(200).json({
+      client: payment.client_secret,
+      message: "Payment processed successfully",
+    });
   } catch (err) {
-    (err as any).statusCode = 500;
-    console.log(err);
-    throw err;
+    await t.rollback();
+    console.error(err);
+    res.status(500).json({ message: "Checkout failed", error: err });
   }
 };
