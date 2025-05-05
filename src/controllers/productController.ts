@@ -65,7 +65,9 @@ export const createProduct = async (req: any, res: any, next: any) => {
       console.log(errors);
       throw new Error("input invalid");
     }
+
     const reqBody = req.body as reqBodyProuduct;
+
     const product = await Product.findOne({
       where: {
         name: reqBody.name,
@@ -81,7 +83,7 @@ export const createProduct = async (req: any, res: any, next: any) => {
           name: reqBody.name,
           price: reqBody.price,
           description: reqBody.description,
-          imageUrl: reqBody.imageUrl,
+          imageUrl: req.file.path,
           userID: reqBody.userID,
           amount_in_inventory: 1,
           avarege_rating: 5,

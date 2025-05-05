@@ -15,6 +15,9 @@ import message from "./models/message";
 import Payment from "./models/payments";
 import { Server } from "socket.io"; // ✅ import socket.io
 import http from "http";
+import multer from "multer";
+import path from "path";
+
 const app = express();
 // relationships
 const server = http.createServer(app); // ✅ create HTTP server from Express app
@@ -58,6 +61,7 @@ Rating.belongsTo(Product, { foreignKey: "productID" });
 
 Order.hasOne(Payment, { foreignKey: "productID", onDelete: "CASCADE" });
 Payment.belongsTo(Order);
+
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -72,9 +76,11 @@ app.get("/home", async (req: any, res: any, next: any) => {
   /// needs pagention
   try {
     const products = await Product.findAll();
-    if (products.length == 0)
+    if (products.length == 0) {
       res.status(202).json({ message: "no Products in inventory" });
-    else res.status(200).json({ message: "Products :", products: products });
+    } else {
+      res.status(200).json({ message: "Products :", products: products });
+    }
   } catch (err) {
     (err as any).statusCode = 500;
     throw err;
