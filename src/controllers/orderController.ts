@@ -13,6 +13,31 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2025-04-30.basil",
 });
+export const getOrders = async (req: any, res: any, next: any) => {
+  try {
+    const userID = req.params.userID;
+    const orders = await Order.findAll({
+      where: {
+        userID: userID,
+      },
+    });
+    if (orders.length == 0) {
+      const err = new Error("no order made yet!");
+      (err as any).statusCode = 404;
+      throw err;
+    } else {
+      const or = [];
+      for (var i of orders) {
+        or.push({ order: i.get() });
+      }
+      res.status(201).json({ message: "here is all ur orders", orders: or });
+    }
+  } catch (err) {
+    (err as any).statusCode = 500;
+    console.error(err);
+    throw err;
+  }
+};
 export const createOrder = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {

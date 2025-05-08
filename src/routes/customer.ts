@@ -13,6 +13,7 @@ import {
   cancelOrder,
   updateOrder,
   checkOut,
+  getOrders,
 } from "../controllers/orderController";
 import isAuth from "../middlewares/isAuth";
 import { validateProduct } from "../middlewares/validation";
@@ -45,5 +46,7 @@ router.delete("/order/:orderID", isAuth, cancelOrder);
 router.put("/order/:orderID", isAuth, updateOrder);
 
 router.post("/checkout/:orderID", isAuth, checkOut);
+
+router.get("/my-orders/:userID", getOrders);
 
 export default router;

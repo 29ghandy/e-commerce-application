@@ -13,14 +13,12 @@ import customerRoutes from "./routes/customer";
 import customerServiceRoutes from "./routes/customer-service";
 import message from "./models/message";
 import Payment from "./models/payments";
-import { Server } from "socket.io"; // ✅ import socket.io
+import { Server } from "socket.io";
 import http from "http";
-import multer from "multer";
-import path from "path";
 
 const app = express();
 // relationships
-const server = http.createServer(app); // ✅ create HTTP server from Express app
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*", // change this to your frontend domain in production
@@ -60,7 +58,7 @@ Product.hasMany(Rating, { foreignKey: "productID", onDelete: "CASCADE" });
 Rating.belongsTo(Product, { foreignKey: "productID" });
 
 Order.hasOne(Payment, { foreignKey: "orderID", onDelete: "CASCADE" });
-Payment.belongsTo(Order);
+Payment.belongsTo(Order, { foreignKey: "orderID" });
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -95,6 +93,6 @@ app.use("/customer-service", customerServiceRoutes);
 sequelize
   .sync()
   .then((res) => {
-    server.listen(3000);
+    server.listen(process.env.port);
   })
   .catch((err) => console.log(err));

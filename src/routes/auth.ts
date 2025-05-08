@@ -5,6 +5,7 @@ import {
   login,
   forgetPassword,
   deleteAccount,
+  resetPassword,
 } from "../controllers/authContorller";
 import isAuth from "../middlewares/isAuth";
 import { check } from "express-validator";
@@ -16,6 +17,8 @@ router.post("/signup", validateUser as any, signup);
 router.post("/login", validateUser as any, login);
 
 router.post("/forgetpassword", forgetPassword);
+
+router.post("/restpassword", resetPassword);
 
 router.delete("/delete-account", isAuth, deleteAccount);
 

@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import sequelize from "../util/database";
 import { validationResult } from "express-validator";
 import { console } from "inspector";
-
+import { sendResetEmail } from "../util/sendingmails";
 export const signup = async (req: any, res: any, next: any) => {
   const t = await sequelize.transaction();
   try {
@@ -66,7 +66,7 @@ export const login = async (req: any, res: any, next: any) => {
         email: user.email,
         userID: user.userID,
       },
-      "secret",
+      process.env.jwtSecret as string,
       { expiresIn: "1h" }
     );
 
@@ -82,12 +82,56 @@ export const login = async (req: any, res: any, next: any) => {
 };
 export const forgetPassword = async (req: any, res: any, next: any) => {
   try {
+    const email = req.body.email;
+    const user = await User.findOne({ where: { email: email } });
+    if (!user) {
+      const err = new Error("no user with this email");
+      (err as any).statusCode = 404;
+      throw err;
+    } else {
+      const token = jwt.sign(
+        { userID: user.get().userID },
+        process.env.jwtSecret as string,
+        {
+          expiresIn: "1h",
+        }
+      );
+
+      const resetLink = `${req.protocol}://${req.get(
+        "host"
+      )}/api/v1/resetpassward/${token}`;
+      await sendResetEmail(user.get().userID, resetLink);
+    }
   } catch (err) {
     (err as any).statusCode = 500;
     console.log(err);
     throw err;
   }
 };
+
+export const resetPassword = async (req: any, res: any, next: any) => {
+  const token = req.body.token;
+  const newPassword = req.body.newPassword;
+  try {
+    const decoded: any = jwt.verify(token, process.env.jwtSecret as string);
+    const user = await User.findByPk(decoded.userID);
+
+    if (!user) {
+      const err = new Error("no user found");
+      (err as any).statusCode = 404;
+      throw err;
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.update(
+      { password: hashedPassword },
+      { where: { userID: decoded.userID } }
+    );
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token" });
+  }
+};
+
 export const deleteAccount = async (req: any, res: any, next: any) => {
   try {
     const userId = req.params.userID;

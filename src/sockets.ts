@@ -1,48 +1,54 @@
-import { Server } from "socket.io";
-import Message from "./models/message";
+import { Server, Socket } from "socket.io";
 
-const connectedUsers: Record<number, string> = {}; // Maps userID to socket.id
+interface SupportAgent {
+  socketId: string;
+  userId: number;
+  busy: boolean;
+}
 
-export const initSocket = (io: Server) => {
-  io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+const agents: SupportAgent[] = [];
+const activeChats: Record<string, string> = {}; // customer → agent
 
-    // User joins and identifies themselves
-    socket.on("join", (userID: number) => {
-      connectedUsers[userID] = socket.id;
-      console.log(`User ${userID} joined with socket ID ${socket.id}`);
+export const initChatSocket = (io: Server) => {
+  io.on("connection", (socket: Socket) => {
+    console.log("Connected:", socket.id);
+
+    socket.on("agent-join", ({ userId }) => {
+      agents.push({ socketId: socket.id, userId, busy: false });
+      console.log(`Agent ${userId} joined`);
     });
 
-    // Handle message sending
-    socket.on("send_message", async (data: {
-      fromUserID: number;
-      toUserID: number;
-      content: string;
-    }) => {
-      const { fromUserID, toUserID, content } = data;
-
-      // Save to DB
-      await Message.create({ fromUserID, toUserID, content });
-
-      // Emit to recipient if online
-      const targetSocket = connectedUsers[toUserID];
-      if (targetSocket) {
-        io.to(targetSocket).emit("receive_message", {
-          fromUserID,
-          content,
-        });
+    socket.on("customer-join", ({ userId }) => {
+      const agent = agents.find((a) => !a.busy);
+      if (!agent) {
+        socket.emit("no-agents");
+        return;
       }
+      agent.busy = true;
+      activeChats[socket.id] = agent.socketId;
+      activeChats[agent.socketId] = socket.id;
+
+      io.to(socket.id).emit("agent-connected", { agentId: agent.userId });
+      io.to(agent.socketId).emit("customer-connected", { customerId: userId });
     });
 
-    // Handle disconnect
+    socket.on("send-message", ({ message }) => {
+      const peer = activeChats[socket.id];
+      if (peer) io.to(peer).emit("receive-message", { message });
+    });
+
     socket.on("disconnect", () => {
-      for (const userID in connectedUsers) {
-        if (connectedUsers[userID] === socket.id) {
-          delete connectedUsers[userID];
-          break;
-        }
+      const peer = activeChats[socket.id];
+      if (peer) {
+        io.to(peer).emit("peer-disconnected");
+        delete activeChats[peer];
+        const agent = agents.find((a) => a.socketId === peer);
+        if (agent) agent.busy = false;
       }
-      console.log("User disconnected:", socket.id);
+
+      delete activeChats[socket.id];
+      const i = agents.findIndex((a) => a.socketId === socket.id);
+      if (i !== -1) agents.splice(i, 1);
     });
   });
 };
