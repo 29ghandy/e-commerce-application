@@ -8,7 +8,6 @@ import {
   resetPassword,
 } from "../controllers/authContorller";
 import isAuth from "../middlewares/isAuth";
-import { check } from "express-validator";
 
 const router = Router();
 
@@ -18,7 +17,7 @@ router.post("/login", validateUser as any, login);
 
 router.post("/forgetpassword", forgetPassword);
 
-router.post("/restpassword", resetPassword);
+router.patch("/restpassword", resetPassword);
 
 router.delete("/delete-account", isAuth, deleteAccount);
 

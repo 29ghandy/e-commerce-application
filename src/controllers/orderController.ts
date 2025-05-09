@@ -232,22 +232,25 @@ export const checkOut = async (req: any, res: any, next: any) => {
     }
 
     const od = order.get();
-
+    if (od.status === "paid") {
+      res.status(301).json({ message: "order is already paid" });
+    }
     // Step 1: Create PaymentIntent with Stripe
     const payment = await stripe.paymentIntents.create({
       amount: od.totalPrice,
       currency: "usd",
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      payment_method: "pm_card_visa",
+      confirm: true,
+      return_url: "http://localhost:3000/home",
     });
-
+    console.log(payment.latest_charge);
     // Step 2: Record the payment
     await Payments.create(
       {
         orderID: id,
         userID: od.userID,
         amount: od.totalPrice,
+        stripeID: payment.id,
       },
       { transaction: t }
     );
@@ -304,6 +307,7 @@ export const checkOut = async (req: any, res: any, next: any) => {
 
       await sequelize.query(updateQuery, { transaction: t });
     }
+    // destroy
 
     // Commit transaction
     await t.commit();

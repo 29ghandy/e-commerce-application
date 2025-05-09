@@ -3,12 +3,11 @@ import User from "../models/user";
 import bcrypt from "bcryptjs";
 import { reqBodyAuth } from "../types";
 import jwt from "jsonwebtoken";
-import sequelize from "../util/database";
 import { validationResult } from "express-validator";
 import { console } from "inspector";
 import { sendResetEmail } from "../util/sendingmails";
+
 export const signup = async (req: any, res: any, next: any) => {
-  const t = await sequelize.transaction();
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -26,19 +25,15 @@ export const signup = async (req: any, res: any, next: any) => {
       email: body.email,
     };
 
-    await User.create(
-      {
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        role: user.role,
-      },
-      { transaction: t }
-    );
-    t.commit();
+    await User.create({
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+    });
+
     res.status(201).json({ message: "User created!" });
   } catch (err) {
-    t.rollback();
     (err as any).statusCode = 500;
     throw err;
   }
@@ -47,7 +42,6 @@ export const signup = async (req: any, res: any, next: any) => {
 export const login = async (req: any, res: any, next: any) => {
   try {
     const body = req.body as reqBodyAuth;
-    const t = await sequelize.transaction();
     const result = await User.findOne({ where: { email: body.email } });
     if (!result) {
       const error = new Error("there is no user with this email");

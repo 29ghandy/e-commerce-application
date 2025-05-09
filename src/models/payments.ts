@@ -22,5 +22,9 @@ const Payments = sequelize.define("payments", {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+  stripeID: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 export default Payments;
