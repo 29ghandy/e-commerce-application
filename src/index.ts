@@ -15,6 +15,7 @@ import message from "./models/message";
 import Payment from "./models/payments";
 import { Server } from "socket.io";
 import http from "http";
+import { initChatSocket } from "./sockets";
 
 const app = express();
 // relationships
@@ -96,3 +97,5 @@ sequelize
     server.listen(process.env.port);
   })
   .catch((err) => console.log(err));
+
+initChatSocket(io); // 👈 This line connects your socket logic
