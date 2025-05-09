@@ -16,7 +16,8 @@ import Payment from "./models/payments";
 import { Server } from "socket.io";
 import http from "http";
 import { initChatSocket } from "./sockets";
-
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 const app = express();
 // relationships
 const server = http.createServer(app);
@@ -26,6 +27,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+
 app.use(bodyParser.json());
 // One User has One Order
 User.hasOne(Order, {
@@ -70,7 +72,14 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
+app.use(helmet());
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+});
 
+app.use(limiter);
 app.get("/home", async (req: any, res: any, next: any) => {
   /// needs pagention
   try {
