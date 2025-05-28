@@ -1,43 +1,46 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initSocket = void 0;
-const message_1 = __importDefault(require("./models/message"));
-const connectedUsers = {}; // Maps userID to socket.id
-const initSocket = (io) => {
+exports.initChatSocket = void 0;
+const agents = [];
+const activeChats = {}; // customer → agent
+const initChatSocket = (io) => {
     io.on("connection", (socket) => {
-        console.log("User connected:", socket.id);
-        // User joins and identifies themselves
-        socket.on("join", (userID) => {
-            connectedUsers[userID] = socket.id;
-            console.log(`User ${userID} joined with socket ID ${socket.id}`);
+        console.log("Connected:", socket.id);
+        socket.on("agent-join", ({ userId }) => {
+            agents.push({ socketId: socket.id, userId, busy: false });
+            console.log(`Agent ${userId} joined`);
         });
-        // Handle message sending
-        socket.on("send_message", async (data) => {
-            const { fromUserID, toUserID, content } = data;
-            // Save to DB
-            await message_1.default.create({ fromUserID, toUserID, content });
-            // Emit to recipient if online
-            const targetSocket = connectedUsers[toUserID];
-            if (targetSocket) {
-                io.to(targetSocket).emit("receive_message", {
-                    fromUserID,
-                    content,
-                });
+        socket.on("customer-join", ({ userId }) => {
+            const agent = agents.find((a) => !a.busy);
+            if (!agent) {
+                socket.emit("no-agents");
+                return;
             }
+            agent.busy = true;
+            activeChats[socket.id] = agent.socketId;
+            activeChats[agent.socketId] = socket.id;
+            io.to(socket.id).emit("agent-connected", { agentId: agent.userId });
+            io.to(agent.socketId).emit("customer-connected", { customerId: userId });
         });
-        // Handle disconnect
+        socket.on("send-message", ({ message }) => {
+            const peer = activeChats[socket.id];
+            if (peer)
+                io.to(peer).emit("receive-message", { message });
+        });
         socket.on("disconnect", () => {
-            for (const userID in connectedUsers) {
-                if (connectedUsers[userID] === socket.id) {
-                    delete connectedUsers[userID];
-                    break;
-                }
+            const peer = activeChats[socket.id];
+            if (peer) {
+                io.to(peer).emit("peer-disconnected");
+                delete activeChats[peer];
+                const agent = agents.find((a) => a.socketId === peer);
+                if (agent)
+                    agent.busy = false;
             }
-            console.log("User disconnected:", socket.id);
+            delete activeChats[socket.id];
+            const i = agents.findIndex((a) => a.socketId === socket.id);
+            if (i !== -1)
+                agents.splice(i, 1);
         });
     });
 };
-exports.initSocket = initSocket;
+exports.initChatSocket = initChatSocket;

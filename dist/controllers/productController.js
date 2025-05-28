@@ -7,6 +7,7 @@ exports.giveRating = exports.updateProduct = exports.deleteProduct = exports.cre
 const product_1 = __importDefault(require("../models/product"));
 const database_1 = __importDefault(require("../util/database"));
 const rating_1 = __importDefault(require("../models/rating"));
+const express_validator_1 = require("express-validator");
 const viewCustomerProducts = async (req, res, next) => {
     /// needs pagention
     try {
@@ -67,6 +68,11 @@ exports.viewProduct = viewProduct;
 const createProduct = async (req, res, next) => {
     const t = await database_1.default.transaction();
     try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            console.log(errors);
+            throw new Error("input invalid");
+        }
         const reqBody = req.body;
         const product = await product_1.default.findOne({
             where: {
@@ -82,7 +88,7 @@ const createProduct = async (req, res, next) => {
                 name: reqBody.name,
                 price: reqBody.price,
                 description: reqBody.description,
-                imageUrl: reqBody.imageUrl,
+                imageUrl: req.file.path,
                 userID: reqBody.userID,
                 amount_in_inventory: 1,
                 avarege_rating: 5,

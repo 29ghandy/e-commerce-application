@@ -25,5 +25,9 @@ const Payments = database_1.default.define("payments", {
         type: sequelize_1.DataTypes.DOUBLE,
         allowNull: false,
     },
+    stripeID: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
 });
 exports.default = Payments;
