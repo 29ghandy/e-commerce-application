@@ -18,6 +18,7 @@ import http from "http";
 import { initChatSocket } from "./sockets";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import chatRoutes from "./routes/chat";
 const app = express();
 // relationships
 const server = http.createServer(app);
@@ -80,6 +81,9 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+app.get("/", (req, res) => {
+  res.redirect("/home");
+});
 app.get("/home", async (req: any, res: any, next: any) => {
   /// needs pagention
   try {
@@ -99,6 +103,8 @@ app.use("/auth", authRoutes);
 app.use("/customer", customerRoutes);
 
 app.use("/customer-service", customerServiceRoutes);
+
+app.use("/chat", chatRoutes);
 
 sequelize
   .sync()
